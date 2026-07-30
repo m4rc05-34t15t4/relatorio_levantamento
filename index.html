@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulário PWA</title>
+    <title>Relatório Levantamento GPS</title>
     <link rel="manifest" href="manifest.json">
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 10px; background: #f4f7f6; }
@@ -12,7 +12,7 @@
         .row { display: flex; gap: 8px; margin-bottom: 10px; }
         .col { flex: 1; display: flex; flex-direction: column; }
         label { font-size: 12px; font-weight: bold; margin-bottom: 3px; color: #444; }
-        input, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
         canvas { border: 2px dashed #999; background: #fafafa; width: 100%; height: 200px; touch-action: none; }
         .btn { background: #1b4d3e; color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-size: 15px; font-weight: bold; width: 100%; margin-top: 10px; }
         .btn-gps { background: #0275d8; padding: 6px; font-size: 12px; margin-top: 4px; }
@@ -30,34 +30,56 @@
 </head>
 <body>
 <div class="form-container">
-    <h3>FORMULÁRIO DE CAMPO</h3>
-    <div class="row">
-        <div class="col" style="flex:2;"><label>Nome do Operador:</label><input type="text" id="operador"></div>
-        <div class="col"><label>Identificação do Ponto:</label><input type="text" id="ponto"></div>
-    </div>
-    <div class="row"><div class="col"><label>Localidade:</label><input type="text" id="localidade"></div></div>
-    <div class="row">
-        <div class="col">
-            <label>Altura Antena:</label><input type="text" id="antena" style="margin-bottom:5px;">
-            <label>Altura Detalhe:</label><input type="text" id="detalhe" style="margin-bottom:5px;">
-            <label>Base:</label><input type="text" id="base" style="margin-bottom:5px;">
-            <label>GPS:</label><input type="text" id="gps" style="margin-bottom:5px;">
-            <label>Data:</label><input type="date" id="data" style="margin-bottom:5px;">
-            <div class="row">
-                <div class="col"><label>Início:</label><input type="time" id="inicio"></div>
-                <div class="col"><label>Fim:</label><input type="time" id="fim"></div>
+    <h3>Relatório Levantamento GPS</h3>
+    <div class="row" style="align-items: flex-end;">
+        <div class="col" style="flex:1.2;"><label>Nome do Operador:</label><input type="text" id="operador"></div>
+        <div class="col" style="flex:1;">
+            <label>Identificação do Ponto:</label>
+            <div id="pontoFormatadoBadge" style="padding: 8px 10px; background: #e2f0d9; color: #1b4d3e; font-weight: bold; font-size: 15px; border: 1px solid #b2d8b2; border-radius: 4px; text-align: center; height: 35px; box-sizing: border-box; display: flex; align-items: center; justify-content: center;">
+                -
             </div>
         </div>
-        <div class="col"><label>Observação:</label><textarea id="observacao" style="height:100%; min-height:220px;"></textarea></div>
+    </div>
+    <div class="row">
+        <div class="col" style="flex:1;"><label>Sigla:</label><input type="text" id="pontoSigla" placeholder="Ex: PT"></div>
+        <div class="col" style="flex:2;"><label>Tipo:</label>
+            <select id="pontoTipo">
+                <option value="H">H (Horizontal)</option>
+                <option value="V">V (Vertical)</option>
+                <option value="HV">HV (Horizontal e Vertical)</option>
+            </select>
+        </div>
+        <div class="col" style="flex:1;"><label>Nº Ordem:</label><input type="text" id="pontoOrdem" placeholder="Ex: 001"></div>
+    </div>
+    <div class="row">
+        <div class="col"><label>Altura Antena (cm):</label><input type="number" step="any" min="0" id="antena" inputmode="decimal" placeholder="Ex: 150"></div>
+        <div class="col"><label>Altura Detalhe (cm):</label><input type="number" step="any" min="0" id="detalhe" inputmode="decimal" placeholder="Ex: 0"></div>
+    </div>
+    <div class="row">
+        <div class="col"><label>Base:</label><input type="text" id="base"></div>
+        <div class="col"><label>GPS:</label><input type="text" id="gps"></div>
+    </div>
+    <div class="row">
+        <div class="col"><label>Data:</label><input type="date" id="data"></div>
+        <div class="col"><label>Início:</label><input type="time" id="inicio"></div>
+        <div class="col"><label>Fim:</label><input type="time" id="fim"></div>
+    </div>
+    <div class="row" style="align-items: flex-end;">
+        <div class="col" style="flex:2;">
+            <label>Coordenada Geográfica Aproximada:</label>
+            <input type="text" id="coordGeo" placeholder="Capturando localização GPS automaticamente...">
+        </div>
+        <div class="col" style="flex:1;">
+            <button type="button" class="btn btn-gps" onclick="pegarGPS(false)" style="margin-top:0; height:35px; white-space:nowrap;">📍 Recapturar GPS</button>
+        </div>
     </div>
     <div class="row">
         <div class="col">
-            <label>Coordenada Geográfica Aproximada:</label>
-            <input type="text" id="coordGeo" placeholder="Lat, Lon">
-            <button type="button" class="btn btn-gps" onclick="pegarGPS()">📍 Capturar GPS Atual</button>
+            <label>Endereço:</label>
+            <input type="text" id="endereco" placeholder="Endereço obtido via GPS ou digite aqui">
         </div>
     </div>
-        <div class="row"><div class="col"><label>Descrição:</label><textarea id="descricao" rows="2"></textarea></div></div>
+    <div class="row"><div class="col"><label>Descrição:</label><textarea id="descricao" rows="2"></textarea></div></div>
     <div class="row"><div class="col"><label>Fotos (Até 5):</label><input type="file" id="fotos" accept="image/*" multiple><div id="previa"></div></div></div>
     
     <!-- Novo Bloco do Croqui (Início) -->
@@ -83,6 +105,10 @@
 
     <button class="btn" onclick="salvarHTML()" style="background:#25D366;">💾 GERAR PARA WHATSAPP</button>
 
+    <footer style="text-align: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 12px; word-break: break-all;">
+        <a href="https://m4rc05-34t15t4.github.io/relatorio_levantamento" target="_blank" style="color: #1b4d3e; text-decoration: none; font-weight: bold;">https://m4rc05-34t15t4.github.io/relatorio_levantamento</a>
+    </footer>
+
 </div>
 <script>
     if ('serviceWorker' in navigator) { navigator.serviceWorker.register('service-worker.js'); }
@@ -93,16 +119,107 @@
     const overlay = document.getElementById('overlayCroqui');
     let croquiSalvoB64 = "";
 
+    const STORAGE_KEY = 'ultimo_ponto_coletado';
+
+    function obterPontoFormatado() {
+        const sigla = (document.getElementById('pontoSigla')?.value || '').trim();
+        const tipo = (document.getElementById('pontoTipo')?.value || '').trim();
+        const ordem = (document.getElementById('pontoOrdem')?.value || '').trim();
+        const partes = [];
+        if (sigla) partes.push(sigla);
+        if (tipo) partes.push(tipo);
+        if (ordem) partes.push(ordem);
+        return partes.join('-') || 'S_N';
+    }
+
+    function atualizarPontoFormatado() {
+        const formatted = obterPontoFormatado();
+        const badge = document.getElementById('pontoFormatadoBadge');
+        if (badge) {
+            badge.innerText = formatted === 'S_N' ? '-' : formatted;
+        }
+    }
+
+    function salvarUltimoPonto() {
+        atualizarPontoFormatado();
+        const dados = {
+            operador: document.getElementById('operador')?.value || '',
+            pontoSigla: document.getElementById('pontoSigla')?.value || '',
+            pontoTipo: document.getElementById('pontoTipo')?.value || '',
+            pontoOrdem: document.getElementById('pontoOrdem')?.value || '',
+            antena: document.getElementById('antena')?.value || '',
+            detalhe: document.getElementById('detalhe')?.value || '',
+            base: document.getElementById('base')?.value || '',
+            gps: document.getElementById('gps')?.value || '',
+            data: document.getElementById('data')?.value || '',
+            inicio: document.getElementById('inicio')?.value || '',
+            fim: document.getElementById('fim')?.value || '',
+            coordGeo: document.getElementById('coordGeo')?.value || '',
+            endereco: document.getElementById('endereco')?.value || '',
+            descricao: document.getElementById('descricao')?.value || ''
+        };
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(dados));
+        } catch (e) {
+            console.error("Erro ao salvar no localStorage", e);
+        }
+    }
+
+    function carregarUltimoPonto() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return;
+            const dados = JSON.parse(raw);
+            if (!dados) return;
+
+            const campos = ['operador', 'pontoSigla', 'pontoTipo', 'pontoOrdem', 'antena', 'detalhe', 'base', 'gps', 'data', 'inicio', 'fim', 'coordGeo', 'endereco', 'descricao'];
+            campos.forEach(id => {
+                const el = document.getElementById(id);
+                if (el && dados[id] !== undefined) {
+                    el.value = dados[id];
+                }
+            });
+
+            if (dados.ponto && !dados.pontoSigla) {
+                const partes = dados.ponto.split('-');
+                if (partes.length === 3) {
+                    if (document.getElementById('pontoSigla')) document.getElementById('pontoSigla').value = partes[0];
+                    if (document.getElementById('pontoTipo')) document.getElementById('pontoTipo').value = partes[1];
+                    if (document.getElementById('pontoOrdem')) document.getElementById('pontoOrdem').value = partes[2];
+                }
+            }
+
+            atualizarPontoFormatado();
+        } catch (e) {
+            console.error("Erro ao carregar do localStorage", e);
+        }
+    }
+
+    function aplicarRestricaoNumerica(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('keydown', e => {
+            if (['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End', '.', ','].includes(e.key) || e.ctrlKey || e.metaKey) {
+                return;
+            }
+            if (!/^[0-9]$/.test(e.key)) {
+                e.preventDefault();
+            }
+        });
+        el.addEventListener('input', e => {
+            el.value = el.value.replace(/[^0-9.,]/g, '');
+        });
+    }
+
     function abrirCroquiTelaCheia() {
         overlay.style.display = 'flex';
         setTimeout(() => {
             canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight - 60; // Desconta a barra de botões
+            canvas.height = window.innerHeight - 60;
             ctx.lineWidth = 3;
             ctx.lineCap = "round";
             ctx.strokeStyle = "#000000";
             
-            // Se já existia um desenho anterior, redesenha ele na tela cheia
             if (croquiSalvoB64) {
                 const img = new Image();
                 img.onload = () => ctx.drawImage(img, 0, 0);
@@ -137,15 +254,90 @@
         });
     });
 
-    function pegarGPS() {
-        if (!navigator.geolocation) return alert("Sem suporte a GPS");
-        navigator.geolocation.getCurrentPosition(p => {
-            document.getElementById('coordGeo').value = `${p.coords.latitude}, ${p.coords.longitude}`;
-        }, () => alert("Erro ao ler GPS"), { enableHighAccuracy: true });
+    function pegarGPS(silencioso = false) {
+        if (!navigator.geolocation) {
+            if (!silencioso) alert("Sem suporte a GPS");
+            return;
+        }
+        const inputGeo = document.getElementById('coordGeo');
+        const inputEndereco = document.getElementById('endereco');
+
+        if (!inputGeo.value) {
+            inputGeo.placeholder = "Buscando localização GPS...";
+        }
+
+        navigator.geolocation.getCurrentPosition(async p => {
+            const lat = p.coords.latitude;
+            const lon = p.coords.longitude;
+            inputGeo.value = `${lat}, ${lon}`;
+            salvarUltimoPonto();
+
+            if (navigator.onLine) {
+                if (!inputEndereco.value) {
+                    inputEndereco.placeholder = "Buscando endereço via internet...";
+                }
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data && data.display_name) {
+                            inputEndereco.value = data.display_name;
+                            salvarUltimoPonto();
+                        }
+                    }
+                } catch (err) {
+                    console.log("Falha ou offline ao buscar endereço:", err);
+                } finally {
+                    inputEndereco.placeholder = "Endereço obtido via GPS ou digite aqui";
+                }
+            }
+        }, err => {
+            console.log("Erro/recusa de GPS:", err);
+            if (!silencioso) alert("Erro ao ler GPS. Verifique as permissões de localização.");
+        }, { enableHighAccuracy: true, timeout: 15000 });
     }
 
     function resCanvas() { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; ctx.lineWidth = 2; ctx.lineCap = "round"; }
-    window.addEventListener('load', resCanvas); window.addEventListener('resize', resCanvas);
+
+    window.addEventListener('load', () => {
+        carregarUltimoPonto();
+
+        // Preenche Data e Hora de Início com a data/hora atual se não estiverem preenchidos
+        const hoje = new Date();
+        const ano = hoje.getFullYear();
+        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+        const dia = String(hoje.getDate()).padStart(2, '0');
+        const hora = String(hoje.getHours()).padStart(2, '0');
+        const minuto = String(hoje.getMinutes()).padStart(2, '0');
+
+        const inputData = document.getElementById('data');
+        if (inputData && !inputData.value) {
+            inputData.value = `${ano}-${mes}-${dia}`;
+        }
+
+        const inputInicio = document.getElementById('inicio');
+        if (inputInicio && !inputInicio.value) {
+            inputInicio.value = `${hora}:${minuto}`;
+        }
+
+        aplicarRestricaoNumerica('antena');
+        aplicarRestricaoNumerica('detalhe');
+        resCanvas();
+
+        const campos = ['operador', 'pontoSigla', 'pontoTipo', 'pontoOrdem', 'antena', 'detalhe', 'base', 'gps', 'data', 'inicio', 'fim', 'coordGeo', 'endereco', 'descricao'];
+        campos.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', salvarUltimoPonto);
+                el.addEventListener('change', salvarUltimoPonto);
+            }
+        });
+
+        // Captura GPS automaticamente ao carregar
+        pegarGPS(true);
+    });
+
+    window.addEventListener('resize', resCanvas);
 
     function xy(e) {
         const r = canvas.getBoundingClientRect();
@@ -160,17 +352,23 @@
     canvas.addEventListener('mousedown', tIni); canvas.addEventListener('mousemove', tMov); canvas.addEventListener('mouseup', () => pintando = false);
 
     function salvarHTML() {
-        const idPt = document.getElementById('ponto').value || 'S_N';
+        salvarUltimoPonto();
+        const idPt = obterPontoFormatado();
         const cGeo = document.getElementById('coordGeo').value;
+        const endereco = document.getElementById('endereco').value;
+        const dataHoraSalvamento = new Date().toLocaleString('pt-BR');
         let ftHtml = ""; imgsB64.forEach((im, idx) => { ftHtml += `<h3>Foto ${idx+1}</h3><img src="${im}" style="max-width:100%;"><br>`; });
         
         let mapLink = "<p>Sem coordenadas.</p>";
         if(cGeo && cGeo.includes(',')) {
             const arr = cGeo.split(',');
-            mapLink = `<p><b>GPS:</b> ${cGeo}</p><a href="https://google.com{arr[0].trim()},${arr[1].trim()}" target="_blank" style="background:#0275d8;color:white;padding:10px;text-decoration:none;display:inline-block;border-radius:4px;">📍 Abrir no Google Maps</a>`;
+            mapLink = `<p><b>GPS:</b> ${cGeo}</p><a href="https://www.google.com/maps?q=${arr[0].trim()},${arr[1].trim()}" target="_blank" style="background:#0275d8;color:white;padding:10px;text-decoration:none;display:inline-block;border-radius:4px;">📍 Abrir no Google Maps</a>`;
         }
 
-        const m = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatorio</title><style>body{font-family:Arial;margin:20px;color:#222;}.box{border:1px solid #ccc;padding:10px;margin-bottom:10px;background:#f9f9f9;}</style></head><body><h2>📋 Formulário de Campo Processado</h2><div class="box"><b>Operador:</b> ${document.getElementById('operador').value}<br><b>Ponto:</b> ${idPt}<br><b>Localidade:</b> ${document.getElementById('localidade').value}</div><div class="box"><b>Altura Antena:</b> ${document.getElementById('antena').value}<br><b>Altura Detalhe:</b> ${document.getElementById('detalhe').value}<br><b>Base:</b> ${document.getElementById('base').value}<br><b>Aparelho GPS:</b> ${document.getElementById('gps').value}<br><b>Data/Hora:</b> ${document.getElementById('data').value} (${document.getElementById('inicio').value} ate ${document.getElementById('fim').value})</div><div class="box"><b>Observação:</b><br>${document.getElementById('observacao').value.replace(/\n/g, '<br>')}</div><div class="box">${mapLink}</div><div class="box"><b>Descrição:</b><br>${document.getElementById('descricao').value.replace(/\n/g, '<br>')}</div><div class="box" style="text-align:center;"><h3>📐 Croqui</h3><img src="${croquiSalvoB64 || canvas.toDataURL('image/png')}" style="background:white;border:1px solid #999;"></div><div class="box" style="text-align:center;">${ftHtml}</div></body></html>`;
+        const antenaVal = document.getElementById('antena').value;
+        const detalheVal = document.getElementById('detalhe').value;
+
+        const m = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório Levantamento GPS</title><style>body{font-family:Arial;margin:20px;color:#222;}.box{border:1px solid #ccc;padding:10px;margin-bottom:10px;background:#f9f9f9;}</style></head><body><h2>📋 Relatório Levantamento GPS</h2><div class="box"><b>Operador:</b> ${document.getElementById('operador').value}<br><b>Ponto:</b> ${idPt}<br><b>Endereço:</b> ${endereco}<br><b>Data/Hora do Salvamento:</b> ${dataHoraSalvamento}</div><div class="box"><b>Altura Antena:</b> ${antenaVal ? antenaVal + ' cm' : ''}<br><b>Altura Detalhe:</b> ${detalheVal ? detalheVal + ' cm' : ''}<br><b>Base:</b> ${document.getElementById('base').value}<br><b>Aparelho GPS:</b> ${document.getElementById('gps').value}<br><b>Data/Hora da Coleta:</b> ${document.getElementById('data').value} (${document.getElementById('inicio').value} ate ${document.getElementById('fim').value})</div><div class="box">${mapLink}</div><div class="box"><b>Descrição:</b><br>${document.getElementById('descricao').value.replace(/\n/g, '<br>')}</div><div class="box" style="text-align:center;"><h3>📐 Croqui</h3><img src="${croquiSalvoB64 || canvas.toDataURL('image/png')}" style="background:white;border:1px solid #999;"></div><div class="box" style="text-align:center;">${ftHtml}</div><div class="box" style="text-align:center; font-size:12px;"><a href="https://m4rc05-34t15t4.github.io/relatorio_levantamento" target="_blank" style="color:#1b4d3e; text-decoration:none; font-weight:bold;">https://m4rc05-34t15t4.github.io/relatorio_levantamento</a></div></body></html>`;
 
         const blob = new Blob([m], { type: "text/html" });
         const link = document.createElement("a");

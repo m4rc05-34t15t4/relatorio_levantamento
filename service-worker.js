@@ -1,4 +1,4 @@
-const CACHE_NAME = 'coletor-campo-v1';
+const CACHE_NAME = 'coletor-campo-v7';
 const ASSETS = [
   'index.html',
   'manifest.json',

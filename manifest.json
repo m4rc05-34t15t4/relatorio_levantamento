@@ -1,6 +1,6 @@
 {
-  "name": "Formulário de Campo PWA",
-  "short_name": "Formulário",
+  "name": "Relatório Levantamento GPS",
+  "short_name": "Levantamento",
   "description": "Coletor de dados offline com fotos, GPS e croqui.",
   "start_url": "index.html",
   "display": "standalone",
