@@ -1,7 +1,7 @@
 {
   "name": "Relatório Levantamento GPS",
-  "short_name": "Levantamento",
-  "description": "Coletor de dados offline com fotos, GPS e croqui.",
+  "short_name": "Relatório GPS",
+  "description": "Relatório de levantamento de coordenadas GPS em campo.",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#ffffff",
