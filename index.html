@@ -4,9 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Relatório Levantamento GPS</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
     <link rel="manifest" href="manifest.json">
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 10px; background: #f4f7f6; }
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 10px; 
+            background: linear-gradient(135deg, #e0e4e8 0%, #bdc3c7 50%, #9099a2 100%);
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
         .form-container { max-width: 550px; margin: auto; background: white; padding: 15px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         h3 { text-align: center; margin: 0 0 15px 0; color: #1b4d3e; border-bottom: 2px solid #1b4d3e; padding-bottom: 5px; }
         .row { display: flex; gap: 8px; margin-bottom: 10px; }
@@ -26,11 +35,73 @@
         #canvas { flex: 1; background: #fafafa; touch-action: none; width: 100vw; }
         .canvas-bar { display: flex; justify-content: space-between; background: #1b4d3e; padding: 10px; gap: 10px; }
         .btn-cv { flex: 1; padding: 12px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        /* Estilo do Cabeçalho com Logos e Bloco Central */
+        .header-block {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 5px 0;
+            width: 100%;
+            gap: 10px;
+        }
+        .header-block .logo-side {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            margin: 0 15px 0 15px;
+        }
+        .header-block .logo-side.left {
+            justify-content: flex-start;
+        }
+        .header-block .logo-side.right {
+            justify-content: flex-end;
+        }
+        .header-block .logo-side img {
+            max-height: 100px;
+            width: auto;
+            max-width: 100%;
+            object-fit: contain;
+        }
+        .header-block .header-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+        }
+        .header-block .header-center img.logo-center {
+            max-height: 80px;
+            width: auto;
+            object-fit: contain;
+            margin-bottom: 0px;
+            display: block;
+        }
+        .header-block .header-center h3 {
+            margin: 0;
+            padding: 2px 0;
+            border: none;
+            font-size: 15px;
+            text-align: center;
+            color: #1b4d3e;
+            line-height: 1.1;
+        }
     </style>
 </head>
 <body>
 <div class="form-container">
-    <h3>Relatório Levantamento GPS</h3>
+    <div class="header-block">
+        <div class="logo-side left">
+            <img src="dsg.png" alt="DSG">
+        </div>
+        <div class="header-center">
+            <img src="logo.png" alt="Logo" class="logo-center">
+            <h3>Relatório<br>Levantamento GPS</h3>
+        </div>
+        <div class="logo-side right">
+            <img src="3cgeo.png" alt="3ª CGEO">
+        </div>
+    </div>
     <div class="row" style="align-items: flex-end;">
         <div class="col" style="flex:1.2;"><label>Nome do Operador:</label><input type="text" id="operador"></div>
         <div class="col" style="flex:1;">
@@ -76,7 +147,7 @@
     <div class="row">
         <div class="col">
             <label>Endereço:</label>
-            <input type="text" id="endereco" placeholder="Endereço obtido via GPS ou digite aqui">
+            <textarea id="endereco" rows="2" placeholder="Endereço obtido via GPS ou digite aqui"></textarea>
         </div>
     </div>
     <div class="row"><div class="col"><label>Descrição:</label><textarea id="descricao" rows="2"></textarea></div></div>
@@ -103,10 +174,10 @@
     </div>
     <!-- Novo Bloco do Croqui (Fim) -->
 
-    <button class="btn" onclick="salvarHTML()" style="background:#25D366;">💾 GERAR PARA WHATSAPP</button>
+    <button class="btn" onclick="salvarHTML()" style="background:#25D366;">💾 SALVAR</button>
 
     <footer style="text-align: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 12px; word-break: break-all;">
-        <a href="https://m4rc05-34t15t4.github.io/relatorio_levantamento" target="_blank" style="color: #1b4d3e; text-decoration: none; font-weight: bold;">https://m4rc05-34t15t4.github.io/relatorio_levantamento</a>
+        <a href="https://m4rc05-34t15t4.github.io/relatorio_levantamento" target="_blank" style="color: #1b4d3e; text-decoration: none; font-weight: bold;">© 2026 Relatório Levantamento GPS</a>
     </footer>
 
 </div>
@@ -333,8 +404,19 @@
             }
         });
 
-        // Captura GPS automaticamente ao carregar
-        pegarGPS(true);
+        // Captura GPS automaticamente ao carregar apenas se não tiver coordenada salva e se a permissão já estiver concedida
+        const inputGeoVal = document.getElementById('coordGeo')?.value;
+        if (!inputGeoVal) {
+            if (navigator.permissions && navigator.permissions.query) {
+                navigator.permissions.query({ name: 'geolocation' }).then(result => {
+                    if (result.state === 'granted') {
+                        pegarGPS(true);
+                    }
+                }).catch(() => {
+                    // Fallback para navegadores que não suportam a consulta de permissão
+                });
+            }
+        }
     });
 
     window.addEventListener('resize', resCanvas);
