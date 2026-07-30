@@ -1,2 +1,2 @@
 # relatorio_levantamento
-Relatorio de Levantamento decoleta de ponto GPS em campo
+Relatório de Levantamento de coleta de pontos GPS em campo
