@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulário PWA</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 10px; background: #f4f7f6; }
+        .form-container { max-width: 550px; margin: auto; background: white; padding: 15px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h3 { text-align: center; margin: 0 0 15px 0; color: #1b4d3e; border-bottom: 2px solid #1b4d3e; padding-bottom: 5px; }
+        .row { display: flex; gap: 8px; margin-bottom: 10px; }
+        .col { flex: 1; display: flex; flex-direction: column; }
+        label { font-size: 12px; font-weight: bold; margin-bottom: 3px; color: #444; }
+        input, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        canvas { border: 2px dashed #999; background: #fafafa; width: 100%; height: 200px; touch-action: none; }
+        .btn { background: #1b4d3e; color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-size: 15px; font-weight: bold; width: 100%; margin-top: 10px; }
+        .btn-gps { background: #0275d8; padding: 6px; font-size: 12px; margin-top: 4px; }
+        .preview-img { max-width: 60px; height: 60px; object-fit: cover; margin-top: 5px; border-radius: 4px; }
+        /* Área de clique no formulário */
+        .preview-canvas-box { border: 2px dashed #999; background: #fafafa; width: 100%; height: 150px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 4px; overflow: hidden; position: relative; }
+        .preview-canvas-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .preview-hint { position: absolute; color: #666; font-size: 12px; background: rgba(255,255,255,0.8); padding: 4px 8px; border-radius: 4px; pointer-events: none; }
+        /* Configuração da Tela Cheia do Desenho */
+        .fullscreen-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: white; z-index: 10000; flex-direction: column; }
+        #canvas { flex: 1; background: #fafafa; touch-action: none; width: 100vw; }
+        .canvas-bar { display: flex; justify-content: space-between; background: #1b4d3e; padding: 10px; gap: 10px; }
+        .btn-cv { flex: 1; padding: 12px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="form-container">
+    <h3>FORMULÁRIO DE CAMPO</h3>
+    <div class="row">
+        <div class="col" style="flex:2;"><label>Nome do Operador:</label><input type="text" id="operador"></div>
+        <div class="col"><label>Identificação do Ponto:</label><input type="text" id="ponto"></div>
+    </div>
+    <div class="row"><div class="col"><label>Localidade:</label><input type="text" id="localidade"></div></div>
+    <div class="row">
+        <div class="col">
+            <label>Altura Antena:</label><input type="text" id="antena" style="margin-bottom:5px;">
+            <label>Altura Detalhe:</label><input type="text" id="detalhe" style="margin-bottom:5px;">
+            <label>Base:</label><input type="text" id="base" style="margin-bottom:5px;">
+            <label>GPS:</label><input type="text" id="gps" style="margin-bottom:5px;">
+            <label>Data:</label><input type="date" id="data" style="margin-bottom:5px;">
+            <div class="row">
+                <div class="col"><label>Início:</label><input type="time" id="inicio"></div>
+                <div class="col"><label>Fim:</label><input type="time" id="fim"></div>
+            </div>
+        </div>
+        <div class="col"><label>Observação:</label><textarea id="observacao" style="height:100%; min-height:220px;"></textarea></div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <label>Coordenada Geográfica Aproximada:</label>
+            <input type="text" id="coordGeo" placeholder="Lat, Lon">
+            <button type="button" class="btn btn-gps" onclick="pegarGPS()">📍 Capturar GPS Atual</button>
+        </div>
+    </div>
+        <div class="row"><div class="col"><label>Descrição:</label><textarea id="descricao" rows="2"></textarea></div></div>
+    <div class="row"><div class="col"><label>Fotos (Até 5):</label><input type="file" id="fotos" accept="image/*" multiple><div id="previa"></div></div></div>
+    
+    <!-- Novo Bloco do Croqui (Início) -->
+    <div class="row">
+        <div class="col">
+            <label>Croqui:</label>
+            <div class="preview-canvas-box" onclick="abrirCroquiTelaCheia()">
+                <span class="preview-hint" id="hintTexto">👉 Clique para Desenhar em Tela Cheia</span>
+                <img id="imgPreviaCroqui" style="display:none;">
+            </div>
+        </div>
+    </div>
+    
+    <div id="overlayCroqui" class="fullscreen-overlay">
+        <div class="canvas-bar">
+            <button type="button" class="btn-cv" onclick="fecharCroquiSemSalvar()" style="background:#d9534f; color:white;">❌ Cancelar</button>
+            <button type="button" class="btn-cv" onclick="limparDesenho()" style="background:#f0ad4e; color:white;">🗑️ Limpar</button>
+            <button type="button" class="btn-cv" onclick="salvarCroquiTelaCheia()" style="background:#5cb85c; color:white;">✔️ Confirmar</button>
+        </div>
+        <canvas id="canvas"></canvas>
+    </div>
+    <!-- Novo Bloco do Croqui (Fim) -->
+
+    <button class="btn" onclick="salvarHTML()" style="background:#25D366;">💾 GERAR PARA WHATSAPP</button>
+
+</div>
+<script>
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('service-worker.js'); }
+    let imgsB64 = [];
+    const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
+    let pintando = false;
+
+    const overlay = document.getElementById('overlayCroqui');
+    let croquiSalvoB64 = "";
+
+    function abrirCroquiTelaCheia() {
+        overlay.style.display = 'flex';
+        setTimeout(() => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight - 60; // Desconta a barra de botões
+            ctx.lineWidth = 3;
+            ctx.lineCap = "round";
+            ctx.strokeStyle = "#000000";
+            
+            // Se já existia um desenho anterior, redesenha ele na tela cheia
+            if (croquiSalvoB64) {
+                const img = new Image();
+                img.onload = () => ctx.drawImage(img, 0, 0);
+                img.src = croquiSalvoB64;
+            }
+        }, 50);
+    }
+
+    function fecharCroquiSemSalvar() { overlay.style.display = 'none'; }
+    function limparDesenho() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+    function salvarCroquiTelaCheia() {
+        croquiSalvoB64 = canvas.toDataURL('image/png');
+        const imgPrevia = document.getElementById('imgPreviaCroqui');
+        imgPrevia.src = croquiSalvoB64;
+        imgPrevia.style.display = 'block';
+        document.getElementById('hintTexto').style.display = 'none';
+        overlay.style.display = 'none';
+    }
+
+    document.getElementById('fotos').addEventListener('change', e => {
+        const files = Array.from(e.target.files).slice(0, 5);
+        document.getElementById('previa').innerHTML = ""; imgsB64 = [];
+        files.forEach(f => {
+            const r = new FileReader();
+            r.onload = ev => {
+                imgsB64.push(ev.target.result);
+                const i = document.createElement('img'); i.src = ev.target.result; i.className="preview-img";
+                document.getElementById('previa').appendChild(i);
+            };
+            r.readAsDataURL(f);
+        });
+    });
+
+    function pegarGPS() {
+        if (!navigator.geolocation) return alert("Sem suporte a GPS");
+        navigator.geolocation.getCurrentPosition(p => {
+            document.getElementById('coordGeo').value = `${p.coords.latitude}, ${p.coords.longitude}`;
+        }, () => alert("Erro ao ler GPS"), { enableHighAccuracy: true });
+    }
+
+    function resCanvas() { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; ctx.lineWidth = 2; ctx.lineCap = "round"; }
+    window.addEventListener('load', resCanvas); window.addEventListener('resize', resCanvas);
+
+    function xy(e) {
+        const r = canvas.getBoundingClientRect();
+        const cx = e.touches ? e.touches[0].clientX : e.clientX;
+        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: cx - r.left, y: cy - r.top };
+    }
+    function tIni(e) { pintando = true; const p = xy(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+    function tMov(e) { if (!pintando) return; if(e.touches) e.preventDefault(); const p = xy(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }
+
+    canvas.addEventListener('touchstart', tIni); canvas.addEventListener('touchmove', tMov); canvas.addEventListener('touchend', () => pintando = false);
+    canvas.addEventListener('mousedown', tIni); canvas.addEventListener('mousemove', tMov); canvas.addEventListener('mouseup', () => pintando = false);
+
+    function salvarHTML() {
+        const idPt = document.getElementById('ponto').value || 'S_N';
+        const cGeo = document.getElementById('coordGeo').value;
+        let ftHtml = ""; imgsB64.forEach((im, idx) => { ftHtml += `<h3>Foto ${idx+1}</h3><img src="${im}" style="max-width:100%;"><br>`; });
+        
+        let mapLink = "<p>Sem coordenadas.</p>";
+        if(cGeo && cGeo.includes(',')) {
+            const arr = cGeo.split(',');
+            mapLink = `<p><b>GPS:</b> ${cGeo}</p><a href="https://google.com{arr[0].trim()},${arr[1].trim()}" target="_blank" style="background:#0275d8;color:white;padding:10px;text-decoration:none;display:inline-block;border-radius:4px;">📍 Abrir no Google Maps</a>`;
+        }
+
+        const m = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatorio</title><style>body{font-family:Arial;margin:20px;color:#222;}.box{border:1px solid #ccc;padding:10px;margin-bottom:10px;background:#f9f9f9;}</style></head><body><h2>📋 Formulário de Campo Processado</h2><div class="box"><b>Operador:</b> ${document.getElementById('operador').value}<br><b>Ponto:</b> ${idPt}<br><b>Localidade:</b> ${document.getElementById('localidade').value}</div><div class="box"><b>Altura Antena:</b> ${document.getElementById('antena').value}<br><b>Altura Detalhe:</b> ${document.getElementById('detalhe').value}<br><b>Base:</b> ${document.getElementById('base').value}<br><b>Aparelho GPS:</b> ${document.getElementById('gps').value}<br><b>Data/Hora:</b> ${document.getElementById('data').value} (${document.getElementById('inicio').value} ate ${document.getElementById('fim').value})</div><div class="box"><b>Observação:</b><br>${document.getElementById('observacao').value.replace(/\n/g, '<br>')}</div><div class="box">${mapLink}</div><div class="box"><b>Descrição:</b><br>${document.getElementById('descricao').value.replace(/\n/g, '<br>')}</div><div class="box" style="text-align:center;"><h3>📐 Croqui</h3><img src="${croquiSalvoB64 || canvas.toDataURL('image/png')}" style="background:white;border:1px solid #999;"></div><div class="box" style="text-align:center;">${ftHtml}</div></body></html>`;
+
+        const blob = new Blob([m], { type: "text/html" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `Ponto_${idPt}.html`;
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    }
+</script>
+</body>
+</html>
