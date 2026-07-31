@@ -58,7 +58,7 @@
             justify-content: flex-end;
         }
         .header-block .logo-side img {
-            max-height: 100px;
+            max-height: 120px;
             width: auto;
             max-width: 100%;
             object-fit: contain;
@@ -96,7 +96,7 @@
         </div>
         <div class="header-center">
             <img src="logo.png" id="imgHeaderLogo" alt="Logo" class="logo-center">
-            <h3>Relatório<br>Levantamento GPS</h3>
+            <h3>Relatório</br>br>Levantamento GPS</h3>
         </div>
         <div class="logo-side right">
             <img src="3cgeo.png" id="imgHeader3CGEO" alt="3ª CGEO">
@@ -390,7 +390,6 @@
             ctx.lineCap = "round"; 
         }
     }
-
     window.addEventListener('load', () => {
         carregarUltimoPonto();
 
@@ -425,18 +424,10 @@
             }
         });
 
-        // Captura GPS automaticamente ao carregar apenas se não tiver coordenada salva e se a permissão já estiver concedida
+        // Captura GPS automaticamente ao carregar se não houver coordenadas salvas
         const inputGeoVal = document.getElementById('coordGeo')?.value;
         if (!inputGeoVal) {
-            if (navigator.permissions && navigator.permissions.query) {
-                navigator.permissions.query({ name: 'geolocation' }).then(result => {
-                    if (result.state === 'granted') {
-                        pegarGPS(true);
-                    }
-                }).catch(() => {
-                    // Fallback para navegadores que não suportam a consulta de permissão
-                });
-            }
+            pegarGPS(true);
         }
     });
 
@@ -448,27 +439,6 @@
         const cy = e.touches ? e.touches[0].clientY : e.clientY;
         return { x: cx - r.left, y: cy - r.top };
     }
-    function tIni(e) { pintando = true; const p = xy(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
-    function tMov(e) { if (!pintando) return; if(e.touches) e.preventDefault(); const p = xy(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }
-
-    canvas.addEventListener('touchstart', tIni); canvas.addEventListener('touchmove', tMov); canvas.addEventListener('touchend', () => pintando = false);
-    canvas.addEventListener('mousedown', tIni); canvas.addEventListener('mousemove', tMov); canvas.addEventListener('mouseup', () => pintando = false);
-
-    function obterBase64DeElementoImg(elementId) {
-        try {
-            const imgEl = document.getElementById(elementId);
-            if (!imgEl) return "";
-            const canvasTmp = document.createElement('canvas');
-            canvasTmp.width = imgEl.naturalWidth || imgEl.width || 100;
-            canvasTmp.height = imgEl.naturalHeight || imgEl.height || 100;
-            const ctxTmp = canvasTmp.getContext('2d');
-            ctxTmp.drawImage(imgEl, 0, 0);
-            return canvasTmp.toDataURL('image/png');
-        } catch (e) {
-            console.error("Erro ao converter imagem em base64:", elementId, e);
-            return "";
-        }
-    }
 
     function salvarHTML() {
         salvarUltimoPonto();
@@ -476,7 +446,19 @@
         const cGeo = document.getElementById('coordGeo').value;
         const endereco = document.getElementById('endereco').value;
         const dataHoraSalvamento = new Date().toLocaleString('pt-BR');
-        let ftHtml = ""; imgsB64.forEach((im, idx) => { ftHtml += `<h3>Foto ${idx+1}</h3><img src="${im}" style="max-width:100%;"><br>`; });
+        
+        let ftHtml = ""; 
+        if (imgsB64.length > 0) {
+            ftHtml = `<h3>📷 Fotos do Levantamento</h3><div class="gallery-grid">`;
+            imgsB64.forEach((im, idx) => { 
+                ftHtml += `
+                    <div class="gallery-item" onclick="abrirModal('${im}')">
+                        <img src="${im}" alt="Foto ${idx+1}">
+                        <div class="gallery-caption">Foto ${idx+1}</div>
+                    </div>`; 
+            });
+            ftHtml += `</div>`;
+        }
         
         let mapLink = "<p>Sem coordenadas.</p>";
         if(cGeo && cGeo.includes(',')) {
@@ -495,10 +477,11 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Relatório Levantamento GPS - ${idPt}</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background: linear-gradient(135deg, #e0e4e8 0%, #bdc3c7 50%, #9099a2 100%); min-height: 100vh; box-sizing: border-box; }
-        .form-container { max-width: 550px; margin: auto; background: white; padding: 15px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .form-container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         .header-block { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; padding: 5px 0; width: 100%; gap: 10px; }
         .header-block .logo-side { flex: 1; display: flex; align-items: center; }
         .header-block .logo-side.left { justify-content: flex-start; }
@@ -506,10 +489,28 @@
         .header-block .logo-side img { max-height: 65px; width: auto; max-width: 100%; object-fit: contain; }
         .header-block .header-center { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 0 0 auto; }
         .header-block .header-center img.logo-center { max-height: 75px; width: auto; object-fit: contain; margin-bottom: 0px; display: block; }
-        .header-block .header-center h3 { margin: 0; padding: 2px 0; border-bottom: 2px solid #1b4d3e; font-size: 15px; text-align: center; color: #1b4d3e; line-height: 1.1; }
-        .box { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; background: #f9f9f9; border-radius: 4px; }
-        footer { text-align: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 12px; word-break: break-all; }
+        .header-block .header-center h3 { margin: 0; padding: 2px 0; border-bottom: 2px solid #1b4d3e; font-size: 16px; text-align: center; color: #1b4d3e; line-height: 1.1; }
+        .box { border: 1px solid #ccc; padding: 12px; margin-bottom: 12px; background: #f9f9f9; border-radius: 6px; }
+        
+        /* Grid de Imagens */
+        .gallery-grid { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 10px; }
+        .gallery-item { flex: 1 1 350px; max-width: 100%; box-sizing: border-box; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; background: #fff; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .gallery-item:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
+        .gallery-item img { width: 100%; height: 220px; object-fit: cover; display: block; }
+        .gallery-caption { padding: 6px; background: #f1f1f1; font-size: 13px; text-align: center; font-weight: bold; color: #333; }
+
+        @media (max-width: 480px) {
+            .gallery-item { flex: 1 1 100%; }
+        }
+
+        /* Modal Lightbox */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 9999; }
+        .modal-overlay img { max-width: 90%; max-height: 90%; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        .modal-close { position: absolute; top: 20px; right: 25px; color: white; font-size: 35px; font-weight: bold; cursor: pointer; user-select: none; }
+
+        footer { text-align: center; margin-top: 20px; padding-top: 12px; border-top: 1px solid #ddd; font-size: 13px; color: #444; line-height: 1.5; }
         footer a { color: #1b4d3e; text-decoration: none; font-weight: bold; }
+        footer a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -550,15 +551,31 @@
     
     <div class="box" style="text-align:center;">
         <h3>📐 Croqui</h3>
-        <img src="${croquiSalvoB64 || canvas.toDataURL('image/png')}" style="background:white; border:1px solid #999; max-width:100%;">
+        <img src="${croquiSalvoB64 || canvas.toDataURL('image/png')}" style="background:white; border:1px solid #999; max-width:100%; border-radius:4px;">
     </div>
     
     ${ftHtml ? `<div class="box" style="text-align:center;">${ftHtml}</div>` : ''}
     
     <footer>
-        <a href="https://m4rc05-34t15t4.github.io/relatorio_levantamento" target="_blank">© 2026 Relatório Levantamento GPS</a>
+        <div><a href="https://m4rc05-34t15t4.github.io/relatorio_levantamento" target="_blank">© 2026 Relatório Levantamento GPS</a></div>
+        <div>Marcos Batista 81 9 94941677</div>
     </footer>
 </div>
+
+<div class="modal-overlay" id="imgModal" onclick="fecharModal()">
+    <span class="modal-close" onclick="fecharModal()">&times;</span>
+    <img id="imgModalSrc" src="" alt="Imagem Ampliada">
+</div>
+
+<script>
+    function abrirModal(src) {
+        document.getElementById('imgModalSrc').src = src;
+        document.getElementById('imgModal').style.display = 'flex';
+    }
+    function fecharModal() {
+        document.getElementById('imgModal').style.display = 'none';
+    }
+<\/script>
 </body>
 </html>`;
 
@@ -566,7 +583,9 @@
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
         link.download = `Ponto_${idPt}.html`;
-        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 </script>
 </body>
